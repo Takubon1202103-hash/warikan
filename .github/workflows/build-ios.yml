@@ -24,6 +24,11 @@ jobs:
       - name: Sync web assets
         run: npx cap sync ios
 
+      - name: Install CocoaPods dependencies
+        run: |
+          cd ios/App
+          pod install
+
       - name: Build unsigned IPA
         run: |
           cd ios/App
@@ -35,7 +40,7 @@ jobs:
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY="" \
             AD_HOC_CODE_SIGNING_ALLOWED=YES \
-            -allowProvisioningUpdates 2>&1 | tail -20
+            -allowProvisioningUpdates 2>&1 | tail -30
 
           mkdir -p Payload
           cp -r build/App.xcarchive/Products/Applications/App.app Payload/
