@@ -27,28 +27,34 @@ jobs:
       - name: Show ios directory structure
         run: find ios -maxdepth 4 | sort
 
-      - name: Install CocoaPods dependencies
+      - name: Install CocoaPods dependencies (if needed)
         run: |
-          PODFILE_DIR=$(find ios -name "Podfile" -exec dirname {} \; | head -1)
-          echo "Podfile found at: $PODFILE_DIR"
-          cd "$PODFILE_DIR"
-          pod install
+          PODFILE=$(find ios -name "Podfile" | head -1)
+          if [ -n "$PODFILE" ]; then
+            echo "Podfile found: $PODFILE"
+            cd "$(dirname $PODFILE)"
+            pod install
+          else
+            echo "No Podfile found, using Swift Package Manager"
+          fi
 
       - name: Build unsigned IPA
         run: |
-          XCWORKSPACE=$(find ios -name "*.xcworkspace" | head -1)
+          XCWORKSPACE=$(find ios -name "*.xcworkspace" ! -path "*/xcuserdata/*" | head -1)
+          echo "xcworkspace: $XCWORKSPACE"
           WORKSPACE_DIR=$(dirname "$XCWORKSPACE")
-          echo "Building from: $WORKSPACE_DIR"
+          WORKSPACE_NAME=$(basename "$XCWORKSPACE")
           cd "$WORKSPACE_DIR"
+
           xcodebuild archive \
-            -workspace "$(basename $XCWORKSPACE)" \
+            -workspace "$WORKSPACE_NAME" \
             -scheme App \
             -configuration Release \
-            -archivePath $PWD/build/App.xcarchive \
+            -archivePath "$PWD/build/App.xcarchive" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY="" \
             AD_HOC_CODE_SIGNING_ALLOWED=YES \
-            -allowProvisioningUpdates 2>&1 | tail -30
+            -allowProvisioningUpdates 2>&1 | tail -50
 
           mkdir -p Payload
           cp -r build/App.xcarchive/Products/Applications/App.app Payload/
