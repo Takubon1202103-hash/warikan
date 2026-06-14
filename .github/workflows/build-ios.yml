@@ -24,16 +24,24 @@ jobs:
       - name: Sync web assets
         run: npx cap sync ios
 
+      - name: Show ios directory structure
+        run: find ios -maxdepth 4 | sort
+
       - name: Install CocoaPods dependencies
         run: |
-          cd ios/App
+          PODFILE_DIR=$(find ios -name "Podfile" -exec dirname {} \; | head -1)
+          echo "Podfile found at: $PODFILE_DIR"
+          cd "$PODFILE_DIR"
           pod install
 
       - name: Build unsigned IPA
         run: |
-          cd ios/App
+          XCWORKSPACE=$(find ios -name "*.xcworkspace" | head -1)
+          WORKSPACE_DIR=$(dirname "$XCWORKSPACE")
+          echo "Building from: $WORKSPACE_DIR"
+          cd "$WORKSPACE_DIR"
           xcodebuild archive \
-            -workspace App.xcworkspace \
+            -workspace "$(basename $XCWORKSPACE)" \
             -scheme App \
             -configuration Release \
             -archivePath $PWD/build/App.xcarchive \
@@ -50,4 +58,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: warikan-ipa
-          path: ios/App/App.ipa
+          path: ios/**/App.ipa
