@@ -1,5 +1,5 @@
 {
   "appId": "com.warikan.app",
   "appName": "割り勘アプリ",
-  "webDir": "."
+  "webDir": "www"
 }
