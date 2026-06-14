@@ -315,7 +315,8 @@
       resultRows.appendChild(div);
     });
 
-    document.getElementById('result-total').textContent = `${actualTotal.toLocaleString()} 円`;
+    const remainderNote = remainder > 0 ? ` (余り ${remainder}円)` : '';
+    document.getElementById('result-total').textContent = `${actualTotal.toLocaleString()} 円${remainderNote}`;
     const result = document.getElementById('result');
     result.classList.add('show');
   }
