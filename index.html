@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="割り勘">
+  <meta name="theme-color" content="#667eea">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <title>割り勘アプリ</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      font-family: 'Hiragino Sans', 'Meiryo', sans-serif;
+      background: #f0f4f8;
+      min-height: 100vh;
+      min-height: -webkit-fill-available;
+      display: flex;
+      justify-content: center;
+      padding: 24px 16px;
+      padding-bottom: calc(24px + env(safe-area-inset-bottom));
+    }
+
+    .container {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      padding: 32px 28px;
+      width: 100%;
+      max-width: 480px;
+      height: fit-content;
+    }
+
+    h1 {
+      font-size: 1.6rem;
+      color: #1a202c;
+      margin-bottom: 28px;
+      text-align: center;
+    }
+
+    .section {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #4a5568;
+      margin-bottom: 6px;
+    }
+
+    input[type="number"], input[type="text"] {
+      width: 100%;
+      padding: 10px 14px;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 16px; /* 16px未満だとiOSが自動ズームする */
+      color: #1a202c;
+      transition: border-color 0.2s;
+      outline: none;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    input:focus {
+      border-color: #667eea;
+    }
+
+    .people-control {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .people-control button {
+      width: 44px;
+      height: 44px;
+      border: none;
+      border-radius: 8px;
+      background: #667eea;
+      color: #fff;
+      font-size: 1.4rem;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: background 0.2s;
+      -webkit-appearance: none;
+      appearance: none;
+      touch-action: manipulation;
+    }
+
+    .people-control button:hover { background: #5a6fd6; }
+
+    .people-control input {
+      text-align: center;
+      font-weight: 700;
+      font-size: 1.1rem;
+    }
+
+    .members {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .member-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .member-row input[type="text"] { flex: 1; }
+
+    .member-row .extra {
+      width: 110px;
+      flex-shrink: 0;
+    }
+
+    .extra-label {
+      font-size: 0.75rem;
+      color: #718096;
+      text-align: center;
+    }
+
+    .btn-calc {
+      width: 100%;
+      padding: 16px;
+      background: #667eea;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 1.05rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      margin-top: 8px;
+      -webkit-appearance: none;
+      appearance: none;
+      touch-action: manipulation;
+    }
+
+    .btn-calc:hover { background: #5a6fd6; }
+    .btn-calc:active { transform: scale(0.98); }
+
+    .result {
+      margin-top: 24px;
+      background: #eef2ff;
+      border-radius: 12px;
+      padding: 20px;
+      display: none;
+    }
+
+    .result.show { display: block; }
+
+    .result h2 {
+      font-size: 0.9rem;
+      color: #5a6fd6;
+      margin-bottom: 14px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .result-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid #d6e0ff;
+      font-size: 1rem;
+      color: #1a202c;
+    }
+
+    .result-row:last-child { border-bottom: none; }
+
+    .result-row .amount {
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: #5a6fd6;
+    }
+
+    .total-row {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 2px solid #667eea;
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: #4a5568;
+    }
+
+    .error {
+      color: #e53e3e;
+      font-size: 0.85rem;
+      margin-top: 6px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>割り勘アプリ</h1>
+
+  <div class="section">
+    <label>合計金額 (円)</label>
+    <input type="number" id="total" placeholder="例: 12000" min="0" inputmode="numeric">
+    <div class="error" id="err-total">合計金額を入力してください</div>
+  </div>
+
+  <div class="section">
+    <label>人数</label>
+    <div class="people-control">
+      <button onclick="changePeople(-1)">－</button>
+      <input type="number" id="count" value="2" min="1" max="20" readonly>
+      <button onclick="changePeople(1)">＋</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <label>名前 / 追加金額 (任意)</label>
+    <div class="members" id="members"></div>
+  </div>
+
+  <button class="btn-calc" onclick="calculate()">計算する</button>
+
+  <div class="result" id="result">
+    <h2>計算結果</h2>
+    <div id="result-rows"></div>
+    <div class="total-row">
+      <span>合計</span>
+      <span id="result-total"></span>
+    </div>
+  </div>
+</div>
+
+<script>
+  let count = 2;
+
+  function changePeople(delta) {
+    count = Math.max(1, Math.min(20, count + delta));
+    document.getElementById('count').value = count;
+    renderMembers();
+  }
+
+  function renderMembers() {
+    const container = document.getElementById('members');
+    const existing = [...container.querySelectorAll('.member-row')];
+    const existingData = existing.map(row => ({
+      name: row.querySelector('input[type="text"]').value,
+      extra: row.querySelector('.extra').value,
+    }));
+
+    container.innerHTML = '';
+    for (let i = 0; i < count; i++) {
+      const row = document.createElement('div');
+      row.className = 'member-row';
+
+      const nameInput = document.createElement('input');
+      nameInput.type = 'text';
+      nameInput.placeholder = `人 ${i + 1}`;
+      nameInput.value = existingData[i]?.name ?? '';
+
+      const extraInput = document.createElement('input');
+      extraInput.type = 'number';
+      extraInput.className = 'extra';
+      extraInput.placeholder = '+追加(円)';
+      extraInput.min = '0';
+      extraInput.setAttribute('inputmode', 'numeric');
+      extraInput.value = existingData[i]?.extra ?? '';
+
+      row.appendChild(nameInput);
+      row.appendChild(extraInput);
+      container.appendChild(row);
+    }
+  }
+
+  function calculate() {
+    const totalInput = document.getElementById('total');
+    const errTotal = document.getElementById('err-total');
+    const total = parseFloat(totalInput.value);
+
+    errTotal.style.display = 'none';
+
+    if (!totalInput.value || isNaN(total) || total < 0) {
+      errTotal.style.display = 'block';
+      return;
+    }
+
+    const rows = [...document.querySelectorAll('.member-row')];
+    const members = rows.map((row, i) => ({
+      name: row.querySelector('input[type="text"]').value.trim() || `人 ${i + 1}`,
+      extra: parseFloat(row.querySelector('.extra').value) || 0,
+    }));
+
+    const totalExtra = members.reduce((s, m) => s + m.extra, 0);
+    const base = total - totalExtra;
+    const perPerson = base / count;
+
+    const resultRows = document.getElementById('result-rows');
+    resultRows.innerHTML = '';
+
+    let actualTotal = 0;
+    members.forEach((m, i) => {
+      const amount = Math.ceil(perPerson + m.extra);
+      actualTotal += amount;
+      const div = document.createElement('div');
+      div.className = 'result-row';
+      div.innerHTML = `<span>${m.name}</span><span class="amount">${amount.toLocaleString()} 円</span>`;
+      resultRows.appendChild(div);
+    });
+
+    document.getElementById('result-total').textContent = `${actualTotal.toLocaleString()} 円`;
+    const result = document.getElementById('result');
+    result.classList.add('show');
+  }
+
+  renderMembers();
+
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js');
+  }
+</script>
+</body>
+</html>
