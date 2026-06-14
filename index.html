@@ -299,14 +299,15 @@
 
     const totalExtra = members.reduce((s, m) => s + m.extra, 0);
     const base = total - totalExtra;
-    const perPerson = base / count;
+    const basePerPerson = Math.floor(base / count);
+    const remainder = Math.round(base - basePerPerson * count);
 
     const resultRows = document.getElementById('result-rows');
     resultRows.innerHTML = '';
 
     let actualTotal = 0;
     members.forEach((m, i) => {
-      const amount = Math.ceil(perPerson + m.extra);
+      const amount = basePerPerson + m.extra + (i < remainder ? 1 : 0);
       actualTotal += amount;
       const div = document.createElement('div');
       div.className = 'result-row';
